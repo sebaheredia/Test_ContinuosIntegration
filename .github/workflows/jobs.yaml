@@ -55,4 +55,4 @@ jobs:
           file: ./container/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}/${{ steps.configs.outputs.CONTAINER_IMAGE_OWNER }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
+          tags: sebaheredia/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
