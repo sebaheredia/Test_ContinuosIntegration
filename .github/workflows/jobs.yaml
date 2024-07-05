@@ -1,4 +1,3 @@
-# Definición del workflow
 name: Main workflow
 
 on:
@@ -12,19 +11,16 @@ jobs:
   main-action:
     runs-on: ubuntu-22.04
     steps:
-      # Configura Git para usar "main" como rama por defecto y desactiva la verificación SSL.
       - name: Setup git
         run: |
           git config --global init.defaultBranch main
           git config --global http.sslVerify "false"
 
-      # Clona el repositorio en la máquina virtual. fetch-depth: 0 asegura que se clone todo el historial, necesario para operaciones con tags.
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Lee variables de un archivo de configuración y las guarda como salidas del paso para usarlas más tarde.
       - name: Read config variables
         id: configs
         run: |
@@ -34,20 +30,17 @@ jobs:
           echo "CONTAINER_IMAGE_OWNER=$(echo $CONTAINER_IMAGE_OWNER | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
           echo "APP_NAME=$(echo $APP_NAME | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # Extrae el nombre del repositorio y la versión actual (basada en tags de Git) y los guarda como salidas.
       - name: Get metadata
         id: meta
         run: |
           echo "REPO_NAME=$(echo ${GITHUB_REPOSITORY} | awk -F'/' '{print tolower($2)}')" >> $GITHUB_OUTPUT
           echo "REPO_VERSION=$(git describe --tags --always | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-      # Prepara archivos para crear la imagen del contenedor.
       - name: Prepare files for create container image
         run: |
           mv app-be/main.py container
           mv app-be/requirements.txt container
 
-      # Inicia sesión en el registro de contenedores usando credenciales almacenadas en secretos de GitHub.
       - name: Log in to the container registry
         uses: docker/login-action@v3
         with:
@@ -55,7 +48,6 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      # Construye una imagen Docker usando el Dockerfile en el directorio 'container', y la sube al registro con un tag basado en las variables configuradas y la versión del repositorio.
       - name: Build and push container image
         uses: docker/build-push-action@v5
         with:
