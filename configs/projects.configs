@@ -1,0 +1,4 @@
+GIT_REPOSITORY_URL="gitd.dev.uds.st.ae.conae.gov.ar"
+CONTAINER_IMAGE_OWNER="gvt"
+
+APP_NAME="test001"
