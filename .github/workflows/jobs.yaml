@@ -46,7 +46,7 @@ jobs:
         with:
           registry: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}
           username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push container image
         uses: docker/build-push-action@v5
