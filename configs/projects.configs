@@ -1,4 +1,4 @@
-GIT_REPOSITORY_URL="github.com/sebaheredia/test_ContinuosIntegration"
+GIT_REPOSITORY_URL="github.com/sebaheredia/test_continuosintegration"
 CONTAINER_IMAGE_OWNER="gvt"
 
 APP_NAME="test_github"
