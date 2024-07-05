@@ -1,4 +1,4 @@
-GIT_REPOSITORY_URL="gitd.dev.uds.st.ae.conae.gov.ar"
+GIT_REPOSITORY_URL="github.com/sebaheredia/Test_ContinuosIntegration"
 CONTAINER_IMAGE_OWNER="gvt"
 
 APP_NAME="test001"

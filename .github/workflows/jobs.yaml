@@ -1,51 +1,68 @@
+# Definición del workflow
+# Este bloque define el nombre del workflow y cuándo se ejecutará. En este caso, se activará en cualquier push a cualquier rama ("**") y cuando se cree un tag que comience con "v" seguido de números y puntos (como v1.0.0).
 name: Main workflow
-run-name: Workflow executed by ${{ gitea.actor }}
+
 on:
   push:
     branches:
       - "**"
     tags:
       - "v*.*.*"
+# Definición del job:
+# Define un job llamado "main-action" que se ejecutará en una máquina virtual con Ubuntu 22.04.
 jobs:
   main-action:
     runs-on: ubuntu-22.04
     steps:
-      - name: Setup git
-        run: |
-          git config --global init.defaultBranch main
-          git config --global http.sslVerify "false"
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Read config variables
-        id: configs
-        run: |
-          cd configs
-          source projects.configs
-          echo GIT_REPOSITORY_URL=$GIT_REPOSITORY_URL >> $GITHUB_OUTPUT
-          echo CONTAINER_IMAGE_OWNER=$CONTAINER_IMAGE_OWNER >> $GITHUB_OUTPUT
-          echo APP_NAME=$APP_NAME >> $GITHUB_OUTPUT
-      - name: Get metadata
-        id: meta
-        run: |
-          echo REPO_NAME=$(echo ${GITHUB_REPOSITORY} | awk -F"/" '{print $2}') >> $GITHUB_OUTPUT
-          echo REPO_VERSION=$(git describe --tags --always | sed 's/^v//') >> $GITHUB_OUTPUT
-      - name: Prepare files for create container image
-        run: |
-          mv app-be/main.py container
-          mv app-be/requirements.txt container
-      - name: Log in to the container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}
-          username: ${{ secrets.S_GITEA_USER }}
-          password: ${{ secrets.S_GITEA_PASSWORD }}
-      - name: Build and push container image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./container
-          file: ./container/Dockerfile
-          platforms: |
-            linux/amd64
-          push: true
-          tags: |
-            ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}/${{ steps.configs.outputs.CONTAINER_IMAGE_OWNER }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
+    # Configura Git para usar "main" como rama por defecto y desactiva la verificación SSL.
+    - name: Setup git
+      run: |
+        git config --global init.defaultBranch main
+        git config --global http.sslVerify "false"
+
+# Clona el repositorio en la máquina virtual. fetch-depth: 0 asegura que se clone todo el historial, necesario para operaciones con tags.
+    - name: Check out repository code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+# Lee variables de un archivo de configuración y las guarda como salidas del paso para usarlas más tarde.
+    - name: Read config variables
+      id: configs
+      run: |
+        cd configs
+        source projects.configs
+        echo "GIT_REPOSITORY_URL=$GIT_REPOSITORY_URL" >> $GITHUB_OUTPUT
+        echo "CONTAINER_IMAGE_OWNER=$CONTAINER_IMAGE_OWNER" >> $GITHUB_OUTPUT
+        echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+
+# Extrae el nombre del repositorio y la versión actual (basada en tags de Git) y los guarda como salidas.
+    - name: Get metadata
+      id: meta
+      run: |
+        echo "REPO_NAME=$(echo ${GITHUB_REPOSITORY} | awk -F"/" '{print $2}')" >> $GITHUB_OUTPUT
+        echo "REPO_VERSION=$(git describe --tags --always | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+# Extrae el nombre del repositorio y la versión actual (basada en tags de Git) y los guarda como salidas.
+    - name: Prepare files for create container image
+      run: |
+        mv app-be/main.py container
+        mv app-be/requirements.txt container
+
+# Inicia sesión en el registro de contenedores usando credenciales almacenadas en secretos de GitHub.
+    - name: Log in to the container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+# Construye una imagen Docker usando el Dockerfile en el directorio 'container', y la sube al registro con un tag basado en las variables configuradas y la versión del repositorio.
+    - name: Build and push container image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./container
+        file: ./container/Dockerfile
+        platforms: linux/amd64
+        push: true
+        tags: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}/${{ steps.configs.outputs.CONTAINER_IMAGE_OWNER }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
