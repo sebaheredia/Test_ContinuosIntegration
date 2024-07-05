@@ -65,4 +65,4 @@ jobs:
         file: ./container/Dockerfile
         platforms: linux/amd64
         push: true
-        tags: ${{ lower(steps.configs.outputs.GIT_REPOSITORY_URL) }}/${{ lower(steps.configs.outputs.CONTAINER_IMAGE_OWNER) }}/${{ lower(steps.meta.outputs.REPO_NAME) }}:${{ steps.meta.outputs.REPO_VERSION }}
+        tags: ${{ steps.configs.outputs.GIT_REPOSITORY_URL }}/${{ steps.configs.outputs.CONTAINER_IMAGE_OWNER }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
